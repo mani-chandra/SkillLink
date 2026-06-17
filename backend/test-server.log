@@ -1,0 +1,43 @@
+◇ injected env (5) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+Executing (default): SELECT name FROM sqlite_master WHERE type='table' AND name='Users';
+Executing (default): PRAGMA INDEX_LIST(`Users`)
+Executing (default): PRAGMA INDEX_INFO(`sqlite_autoindex_Users_1`)
+Executing (default): SELECT name FROM sqlite_master WHERE type='table' AND name='Workers';
+Executing (default): PRAGMA INDEX_LIST(`Workers`)
+Executing (default): PRAGMA INDEX_INFO(`sqlite_autoindex_Workers_1`)
+Executing (default): SELECT name FROM sqlite_master WHERE type='table' AND name='Services';
+Executing (default): PRAGMA INDEX_LIST(`Services`)
+Executing (default): SELECT name FROM sqlite_master WHERE type='table' AND name='Bookings';
+Executing (default): PRAGMA INDEX_LIST(`Bookings`)
+Executing (default): SELECT name FROM sqlite_master WHERE type='table' AND name='Payments';
+Executing (default): PRAGMA INDEX_LIST(`Payments`)
+Executing (default): SELECT name FROM sqlite_master WHERE type='table' AND name='Reviews';
+Executing (default): PRAGMA INDEX_LIST(`Reviews`)
+Executing (default): SELECT name FROM sqlite_master WHERE type='table' AND name='Notifications';
+Executing (default): PRAGMA INDEX_LIST(`Notifications`)
+Executing (3773b706-1330-4e3e-8d7e-f269f6f92628): BEGIN DEFERRED TRANSACTION;
+Executing (3773b706-1330-4e3e-8d7e-f269f6f92628): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Plumbing' LIMIT 1;
+Executing (3773b706-1330-4e3e-8d7e-f269f6f92628): COMMIT;
+Executing (7aa561fc-7378-4232-93d4-6620afc4e0b5): BEGIN DEFERRED TRANSACTION;
+Executing (7aa561fc-7378-4232-93d4-6620afc4e0b5): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Electrical' LIMIT 1;
+Executing (7aa561fc-7378-4232-93d4-6620afc4e0b5): COMMIT;
+Executing (1db71a8e-0a99-4b07-bed5-87f63466d17e): BEGIN DEFERRED TRANSACTION;
+Executing (1db71a8e-0a99-4b07-bed5-87f63466d17e): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Cleaning' LIMIT 1;
+Executing (1db71a8e-0a99-4b07-bed5-87f63466d17e): COMMIT;
+Executing (ac2d14a8-9615-432f-86ec-33176fabf24b): BEGIN DEFERRED TRANSACTION;
+Executing (ac2d14a8-9615-432f-86ec-33176fabf24b): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Drivers' LIMIT 1;
+Executing (ac2d14a8-9615-432f-86ec-33176fabf24b): COMMIT;
+Executing (c0989a5c-52c0-4784-844b-3c5ef2041364): BEGIN DEFERRED TRANSACTION;
+Executing (c0989a5c-52c0-4784-844b-3c5ef2041364): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Home Repair' LIMIT 1;
+Executing (c0989a5c-52c0-4784-844b-3c5ef2041364): COMMIT;
+Executing (bb05684c-5e32-4108-8980-44889849f8af): BEGIN DEFERRED TRANSACTION;
+Executing (bb05684c-5e32-4108-8980-44889849f8af): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'AC Service' LIMIT 1;
+Executing (bb05684c-5e32-4108-8980-44889849f8af): COMMIT;
+Executing (17c789eb-922c-4e4d-8745-a609764441d3): BEGIN DEFERRED TRANSACTION;
+Executing (17c789eb-922c-4e4d-8745-a609764441d3): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Painting' LIMIT 1;
+Executing (17c789eb-922c-4e4d-8745-a609764441d3): COMMIT;
+Executing (3fc6040b-0b31-49a5-86cf-ea31c99951bc): BEGIN DEFERRED TRANSACTION;
+Executing (3fc6040b-0b31-49a5-86cf-ea31c99951bc): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Cooking' LIMIT 1;
+Executing (3fc6040b-0b31-49a5-86cf-ea31c99951bc): COMMIT;
+Server running on port 5001

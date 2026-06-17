@@ -1,0 +1,77 @@
+◇ injected env (5) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Executing (default): DROP TABLE IF EXISTS `Notifications`;
+Executing (default): DROP TABLE IF EXISTS `Reviews`;
+Executing (default): DROP TABLE IF EXISTS `Payments`;
+Executing (default): DROP TABLE IF EXISTS `Bookings`;
+Executing (default): DROP TABLE IF EXISTS `Services`;
+Executing (default): DROP TABLE IF EXISTS `Workers`;
+Executing (default): DROP TABLE IF EXISTS `Users`;
+Executing (default): PRAGMA foreign_keys = OFF
+Executing (default): DROP TABLE IF EXISTS `Users`;
+Executing (default): DROP TABLE IF EXISTS `Workers`;
+Executing (default): DROP TABLE IF EXISTS `Services`;
+Executing (default): DROP TABLE IF EXISTS `Bookings`;
+Executing (default): DROP TABLE IF EXISTS `Payments`;
+Executing (default): DROP TABLE IF EXISTS `Reviews`;
+Executing (default): DROP TABLE IF EXISTS `Notifications`;
+Executing (default): PRAGMA foreign_keys = ON
+Executing (default): DROP TABLE IF EXISTS `Users`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Users` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` VARCHAR(255) NOT NULL, `email` VARCHAR(255) NOT NULL UNIQUE, `password` VARCHAR(255) NOT NULL, `phone` VARCHAR(255), `address` TEXT, `role` TEXT DEFAULT 'customer', `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL);
+Executing (default): PRAGMA INDEX_LIST(`Users`)
+Executing (default): PRAGMA INDEX_INFO(`sqlite_autoindex_Users_1`)
+Executing (default): DROP TABLE IF EXISTS `Workers`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Workers` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `userId` INTEGER NOT NULL UNIQUE REFERENCES `Users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE, `experience` INTEGER, `skills` JSON DEFAULT '[]', `serviceAreas` JSON DEFAULT '[]', `isVerified` TINYINT(1) DEFAULT 0, `availability` TINYINT(1) DEFAULT 1, `availabilitySlots` JSON DEFAULT '[]', `profileImage` VARCHAR(255), `idDocument` VARCHAR(255), `ratings` FLOAT DEFAULT '0', `completedJobs` INTEGER DEFAULT 0, `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL);
+Executing (default): PRAGMA INDEX_LIST(`Workers`)
+Executing (default): PRAGMA INDEX_INFO(`sqlite_autoindex_Workers_1`)
+Executing (default): DROP TABLE IF EXISTS `Services`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Services` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` VARCHAR(255) NOT NULL, `description` TEXT, `icon` VARCHAR(255), `startingPrice` FLOAT NOT NULL, `category` VARCHAR(255), `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL);
+Executing (default): PRAGMA INDEX_LIST(`Services`)
+Executing (default): DROP TABLE IF EXISTS `Bookings`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Bookings` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `customerId` INTEGER NOT NULL REFERENCES `Users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE, `workerId` INTEGER REFERENCES `Workers` (`id`) ON DELETE SET NULL ON UPDATE CASCADE, `serviceId` INTEGER NOT NULL REFERENCES `Services` (`id`) ON DELETE CASCADE ON UPDATE CASCADE, `status` TEXT DEFAULT 'pending', `address` TEXT NOT NULL, `phone` VARCHAR(255) NOT NULL, `preferredDateTime` DATETIME NOT NULL, `description` TEXT, `totalAmount` FLOAT, `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL);
+Executing (default): PRAGMA INDEX_LIST(`Bookings`)
+Executing (default): DROP TABLE IF EXISTS `Payments`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Payments` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `bookingId` INTEGER NOT NULL REFERENCES `Bookings` (`id`) ON DELETE CASCADE ON UPDATE CASCADE, `amount` FLOAT NOT NULL, `method` VARCHAR(255) NOT NULL, `status` TEXT DEFAULT 'pending', `transactionId` VARCHAR(255), `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL);
+Executing (default): PRAGMA INDEX_LIST(`Payments`)
+Executing (default): DROP TABLE IF EXISTS `Reviews`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Reviews` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `bookingId` INTEGER NOT NULL REFERENCES `Bookings` (`id`) ON DELETE CASCADE ON UPDATE CASCADE, `customerId` INTEGER NOT NULL, `workerId` INTEGER NOT NULL, `rating` INTEGER NOT NULL, `comment` TEXT, `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL);
+Executing (default): PRAGMA INDEX_LIST(`Reviews`)
+Executing (default): DROP TABLE IF EXISTS `Notifications`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Notifications` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `userId` INTEGER NOT NULL REFERENCES `Users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE, `message` TEXT NOT NULL, `read` TINYINT(1) DEFAULT 0, `type` VARCHAR(255), `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL);
+Executing (default): PRAGMA INDEX_LIST(`Notifications`)
+Database synced
+Executing (91396e4c-f8e7-40ed-899a-a24d86e771c3): BEGIN DEFERRED TRANSACTION;
+Executing (91396e4c-f8e7-40ed-899a-a24d86e771c3): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Plumbing' LIMIT 1;
+Executing (91396e4c-f8e7-40ed-899a-a24d86e771c3): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7);
+Executing (91396e4c-f8e7-40ed-899a-a24d86e771c3): COMMIT;
+Executing (cc06208c-d0db-4e80-ad2e-7b9a9861a41e): BEGIN DEFERRED TRANSACTION;
+Executing (cc06208c-d0db-4e80-ad2e-7b9a9861a41e): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Electrical' LIMIT 1;
+Executing (cc06208c-d0db-4e80-ad2e-7b9a9861a41e): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7);
+Executing (cc06208c-d0db-4e80-ad2e-7b9a9861a41e): COMMIT;
+Executing (78c679a5-ab81-4db2-baa7-c4868c66334d): BEGIN DEFERRED TRANSACTION;
+Executing (78c679a5-ab81-4db2-baa7-c4868c66334d): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Cleaning' LIMIT 1;
+Executing (78c679a5-ab81-4db2-baa7-c4868c66334d): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7);
+Executing (78c679a5-ab81-4db2-baa7-c4868c66334d): COMMIT;
+Executing (36ad01f1-df38-4841-b8d8-c14f507cfeac): BEGIN DEFERRED TRANSACTION;
+Executing (36ad01f1-df38-4841-b8d8-c14f507cfeac): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Drivers' LIMIT 1;
+Executing (36ad01f1-df38-4841-b8d8-c14f507cfeac): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7);
+Executing (36ad01f1-df38-4841-b8d8-c14f507cfeac): COMMIT;
+Executing (ddc0d718-c5ee-40e1-b024-6241826d0b4f): BEGIN DEFERRED TRANSACTION;
+Executing (ddc0d718-c5ee-40e1-b024-6241826d0b4f): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Home Repair' LIMIT 1;
+Executing (ddc0d718-c5ee-40e1-b024-6241826d0b4f): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7);
+Executing (ddc0d718-c5ee-40e1-b024-6241826d0b4f): COMMIT;
+Executing (ecf817a4-02b8-4f86-addc-3385f2c64e61): BEGIN DEFERRED TRANSACTION;
+Executing (ecf817a4-02b8-4f86-addc-3385f2c64e61): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'AC Service' LIMIT 1;
+Executing (ecf817a4-02b8-4f86-addc-3385f2c64e61): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7);
+Executing (ecf817a4-02b8-4f86-addc-3385f2c64e61): COMMIT;
+Executing (98b044aa-46c9-49b2-96a7-63d9f8536c12): BEGIN DEFERRED TRANSACTION;
+Executing (98b044aa-46c9-49b2-96a7-63d9f8536c12): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Painting' LIMIT 1;
+Executing (98b044aa-46c9-49b2-96a7-63d9f8536c12): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7);
+Executing (98b044aa-46c9-49b2-96a7-63d9f8536c12): COMMIT;
+Executing (5784f8d7-2192-48e8-b8b3-bdaf369d0139): BEGIN DEFERRED TRANSACTION;
+Executing (5784f8d7-2192-48e8-b8b3-bdaf369d0139): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Cooking' LIMIT 1;
+Executing (5784f8d7-2192-48e8-b8b3-bdaf369d0139): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7);
+Executing (5784f8d7-2192-48e8-b8b3-bdaf369d0139): COMMIT;
+Services seeded
+Server running on port 5001

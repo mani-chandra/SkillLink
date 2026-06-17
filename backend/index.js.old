@@ -1,0 +1,492 @@
+
+const express = require('express');
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { promisify } = require('util');
+const { Sequelize, DataTypes } = require('sequelize');
+require('dotenv').config();
+
+const signAsync = promisify(jwt.sign);
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: ':memory:',
+  logging: console.log
+});
+
+const User = sequelize.define('User', {
+  name: { type: DataTypes.STRING, allowNull: false },
+  email: { type: DataTypes.STRING, allowNull: false, unique: true },
+  password: { type: DataTypes.STRING, allowNull: false },
+  phone: DataTypes.STRING,
+  address: DataTypes.TEXT,
+  role: { type: DataTypes.STRING, defaultValue: 'customer' }
+});
+
+const Worker = sequelize.define('Worker', {
+  experience: DataTypes.INTEGER,
+  skills: { type: DataTypes.JSON, defaultValue: [] },
+  serviceAreas: { type: DataTypes.JSON, defaultValue: [] },
+  isVerified: { type: DataTypes.BOOLEAN, defaultValue: false },
+  availability: { type: DataTypes.BOOLEAN, defaultValue: true },
+  availabilitySlots: { type: DataTypes.JSON, defaultValue: [] },
+  profileImage: DataTypes.STRING,
+  idDocument: DataTypes.STRING,
+  ratings: { type: DataTypes.FLOAT, defaultValue: 0 },
+  completedJobs: { type: DataTypes.INTEGER, defaultValue: 0 }
+});
+
+const Service = sequelize.define('Service', {
+  name: { type: DataTypes.STRING, allowNull: false },
+  description: DataTypes.TEXT,
+  icon: DataTypes.STRING,
+  startingPrice: { type: DataTypes.FLOAT, allowNull: false },
+  category: DataTypes.STRING
+});
+
+const Booking = sequelize.define('Booking', {
+  status: { type: DataTypes.STRING, defaultValue: 'pending' },
+  address: { type: DataTypes.TEXT, allowNull: false },
+  phone: { type: DataTypes.STRING, allowNull: false },
+  preferredDateTime: { type: DataTypes.DATE, allowNull: false },
+  description: DataTypes.TEXT,
+  totalAmount: DataTypes.FLOAT
+});
+
+const Payment = sequelize.define('Payment', {
+  amount: { type: DataTypes.FLOAT, allowNull: false },
+  method: { type: DataTypes.STRING, allowNull: false },
+  status: { type: DataTypes.STRING, defaultValue: 'pending' },
+  transactionId: DataTypes.STRING
+});
+
+const Review = sequelize.define('Review', {
+  rating: { type: DataTypes.INTEGER, allowNull: false },
+  comment: DataTypes.TEXT
+});
+
+const Notification = sequelize.define('Notification', {
+  message: { type: DataTypes.TEXT, allowNull: false },
+  read: { type: DataTypes.BOOLEAN, defaultValue: false },
+  type: DataTypes.STRING
+});
+
+User.hasOne(Worker, { foreignKey: 'userId', as: 'Worker' });
+Worker.belongsTo(User, { foreignKey: 'userId', as: 'User' });
+
+User.hasMany(Booking, { foreignKey: 'customerId', as: 'customerBookings' });
+Booking.belongsTo(User, { foreignKey: 'customerId', as: 'customer' });
+
+Worker.hasMany(Booking, { foreignKey: 'workerId', as: 'workerBookings' });
+Booking.belongsTo(Worker, { foreignKey: 'workerId', as: 'worker' });
+
+Service.hasMany(Booking, { foreignKey: 'serviceId' });
+Booking.belongsTo(Service, { foreignKey: 'serviceId' });
+
+Booking.hasOne(Payment, { foreignKey: 'bookingId' });
+Payment.belongsTo(Booking, { foreignKey: 'bookingId' });
+
+Booking.hasOne(Review, { foreignKey: 'bookingId' });
+Review.belongsTo(Booking, { foreignKey: 'bookingId' });
+
+User.hasMany(Notification, { foreignKey: 'userId' });
+Notification.belongsTo(User, { foreignKey: 'userId' });
+
+const authMiddleware = async (req, res, next) => {
+  try {
+    const token = req.header('x-auth-token');
+    if (!token) {
+      return res.status(401).json({ message: 'No token, authorization denied' });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded.user;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: 'Token is not valid' });
+  }
+};
+
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { name, email, password, phone, role = 'customer' } = req.body;
+    let user = await User.findOne({ where: { email } });
+    if (user) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    user = await User.create({ name, email, password: hashedPassword, phone, role });
+    if (role === 'worker') {
+      await Worker.create({ userId: user.id });
+    }
+    const payload = { user: { id: user.id, role: user.role } };
+    const token = await signAsync(payload, process.env.JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+  } catch (error) {
+    console.error('REGISTER ERROR:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    const payload = { user: { id: user.id, role: user.role } };
+    const token = await signAsync(payload, process.env.JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+  } catch (error) {
+    console.error('LOGIN ERROR:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/auth/me', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: { exclude: ['password'] },
+      include: req.user.role === 'worker' ? [{ model: Worker, as: 'Worker' }] : []
+    });
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.put('/api/auth/profile', authMiddleware, async (req, res) => {
+  try {
+    const { name, phone, address } = req.body;
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    await user.update({ name, phone, address });
+    const updatedUser = await User.findByPk(req.user.id, { attributes: { exclude: ['password'] } });
+    res.json(updatedUser);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.put('/api/auth/change-password', authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    await user.update({ password: hashedPassword });
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/auth/admin/users', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    const users = await User.findAll({
+      attributes: { exclude: ['password'] },
+      include: [{ model: Worker, as: 'Worker' }]
+    });
+    res.json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/auth/admin/bookings', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    const bookings = await Booking.findAll({
+      include: [
+        { model: Service },
+        { model: User, as: 'customer' },
+        { model: Worker, as: 'worker', include: [{ model: User, as: 'User' }] }
+      ]
+    });
+    res.json(bookings);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/services', async (req, res) => {
+  try {
+    const services = await Service.findAll();
+    res.json(services);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/bookings', authMiddleware, async (req, res) => {
+  try {
+    const { serviceId, address, phone, preferredDateTime, description } = req.body;
+    const booking = await Booking.create({
+      customerId: req.user.id,
+      serviceId,
+      address,
+      phone,
+      preferredDateTime,
+      description
+    });
+    res.status(201).json(booking);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/bookings/customer', authMiddleware, async (req, res) => {
+  try {
+    const bookings = await Booking.findAll({
+      where: { customerId: req.user.id },
+      include: [
+        { model: Service },
+        { model: Worker, as: 'worker', include: [{ model: User, as: 'User' }] }
+      ]
+    });
+    res.json(bookings);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/bookings/worker', authMiddleware, async (req, res) => {
+  try {
+    const worker = await Worker.findOne({ where: { userId: req.user.id } });
+    if (!worker) {
+      return res.status(404).json({ message: 'Worker not found' });
+    }
+    const bookings = await Booking.findAll({
+      where: { workerId: worker.id },
+      include: [
+        { model: Service },
+        { model: User, as: 'customer' }
+      ]
+    });
+    res.json(bookings);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/bookings/:id', authMiddleware, async (req, res) => {
+  try {
+    const booking = await Booking.findByPk(req.params.id, {
+      include: [
+        { model: Service },
+        { model: User, as: 'customer' },
+        { model: Worker, as: 'worker', include: [{ model: User, as: 'User' }] }
+      ]
+    });
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+    res.json(booking);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.put('/api/bookings/:id/status', authMiddleware, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const booking = await Booking.findByPk(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+    booking.status = status;
+    await booking.save();
+    res.json(booking);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/workers', async (req, res) => {
+  try {
+    const workers = await Worker.findAll({
+      where: { isVerified: true, availability: true },
+      include: [{ model: User, attributes: { exclude: ['password'] } }]
+    });
+    res.json(workers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/workers/admin/all', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    const workers = await Worker.findAll({
+      include: [{ model: User, attributes: { exclude: ['password'] } }]
+    });
+    res.json(workers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/workers/me', authMiddleware, async (req, res) => {
+  try {
+    const worker = await Worker.findOne({ 
+      where: { userId: req.user.id },
+      include: [{ model: User, attributes: { exclude: ['password'] } }]
+    });
+    if (!worker) {
+      return res.status(404).json({ message: 'Worker not found' });
+    }
+    res.json(worker);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/workers/:id', async (req, res) => {
+  try {
+    const worker = await Worker.findByPk(req.params.id, {
+      include: [{ model: User, attributes: { exclude: ['password'] } }]
+    });
+    if (!worker) {
+      return res.status(404).json({ message: 'Worker not found' });
+    }
+    res.json(worker);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.put('/api/workers/profile', authMiddleware, async (req, res) => {
+  try {
+    const worker = await Worker.findOne({ where: { userId: req.user.id } });
+    if (!worker) {
+      return res.status(404).json({ message: 'Worker not found' });
+    }
+    const { experience, skills, serviceAreas, profileImage, idDocument, availability, availabilitySlots } = req.body;
+    await worker.update({ experience, skills, serviceAreas, profileImage, idDocument, availability, availabilitySlots });
+    res.json(worker);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.put('/api/workers/skills', authMiddleware, async (req, res) => {
+  try {
+    const worker = await Worker.findOne({ where: { userId: req.user.id } });
+    if (!worker) {
+      return res.status(404).json({ message: 'Worker not found' });
+    }
+    const { skills } = req.body;
+    await worker.update({ skills });
+    res.json(worker);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.put('/api/workers/availability', authMiddleware, async (req, res) => {
+  try {
+    const worker = await Worker.findOne({ where: { userId: req.user.id } });
+    if (!worker) {
+      return res.status(404).json({ message: 'Worker not found' });
+    }
+    const { availability } = req.body;
+    await worker.update({ availability });
+    res.json(worker);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.put('/api/workers/slots', authMiddleware, async (req, res) => {
+  try {
+    const worker = await Worker.findOne({ where: { userId: req.user.id } });
+    if (!worker) {
+      return res.status(404).json({ message: 'Worker not found' });
+    }
+    const { availabilitySlots } = req.body;
+    await worker.update({ availabilitySlots });
+    res.json(worker);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+const seedServices = async () => {
+  const services = [
+    { name: 'Plumbing', description: 'Fix leaks, unclog drains, install fixtures', icon: '🔧', startingPrice: 299, category: 'Home Repair' },
+    { name: 'Electrical', description: 'Wiring, installations, repairs', icon: '⚡', startingPrice: 399, category: 'Home Repair' },
+    { name: 'Cleaning', description: 'Home, office, deep cleaning', icon: '🧹', startingPrice: 199, category: 'Cleaning' },
+    { name: 'Drivers', description: 'Personal drivers for hire', icon: '🚗', startingPrice: 499, category: 'Transport' },
+    { name: 'Home Repair', description: 'General home repairs and maintenance', icon: '🏠', startingPrice: 349, category: 'Home Repair' },
+    { name: 'AC Service', description: 'AC repair, maintenance, installation', icon: '❄️', startingPrice: 449, category: 'Home Repair' },
+    { name: 'Painting', description: 'Interior and exterior painting', icon: '🎨', startingPrice: 799, category: 'Home Improvement' },
+    { name: 'Cooking', description: 'Personal chefs and cooks', icon: '🍳', startingPrice: 599, category: 'Food' }
+  ];
+  for (const service of services) {
+    await Service.findOrCreate({ where: { name: service.name }, defaults: service });
+  }
+};
+
+const PORT = process.env.PORT || 5000;
+
+async function startServer() {
+  try {
+    await sequelize.sync();
+    console.log('Database synced');
+    await seedServices();
+    console.log('Services seeded');
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error('Start server error:', err);
+  }
+}
+
+startServer();
+

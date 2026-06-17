@@ -1,0 +1,109 @@
+◇ injected env (6) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+Executing (default): DROP TABLE IF EXISTS `Quotations`;
+Executing (default): DROP TABLE IF EXISTS `Invoices`;
+Executing (default): DROP TABLE IF EXISTS `Payouts`;
+Executing (default): DROP TABLE IF EXISTS `Warranties`;
+Executing (default): DROP TABLE IF EXISTS `Commissions`;
+Executing (default): DROP TABLE IF EXISTS `Notifications`;
+Executing (default): DROP TABLE IF EXISTS `Reviews`;
+Executing (default): DROP TABLE IF EXISTS `Payments`;
+Executing (default): DROP TABLE IF EXISTS `Bookings`;
+Executing (default): DROP TABLE IF EXISTS `Services`;
+Executing (default): DROP TABLE IF EXISTS `Workers`;
+Executing (default): DROP TABLE IF EXISTS `Users`;
+Executing (default): PRAGMA foreign_keys = OFF
+Executing (default): DROP TABLE IF EXISTS `Users`;
+Executing (default): DROP TABLE IF EXISTS `Workers`;
+Executing (default): DROP TABLE IF EXISTS `Services`;
+Executing (default): DROP TABLE IF EXISTS `Bookings`;
+Executing (default): DROP TABLE IF EXISTS `Payments`;
+Executing (default): DROP TABLE IF EXISTS `Reviews`;
+Executing (default): DROP TABLE IF EXISTS `Notifications`;
+Executing (default): DROP TABLE IF EXISTS `Commissions`;
+Executing (default): DROP TABLE IF EXISTS `Warranties`;
+Executing (default): DROP TABLE IF EXISTS `Payouts`;
+Executing (default): DROP TABLE IF EXISTS `Invoices`;
+Executing (default): DROP TABLE IF EXISTS `Quotations`;
+Executing (default): PRAGMA foreign_keys = ON
+Executing (default): DROP TABLE IF EXISTS `Users`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Users` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` VARCHAR(255) NOT NULL, `email` VARCHAR(255) NOT NULL UNIQUE, `password` VARCHAR(255) NOT NULL, `phone` VARCHAR(255), `address` TEXT, `role` VARCHAR(255) DEFAULT 'customer', `loyaltyPoints` INTEGER DEFAULT 0, `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL);
+Executing (default): PRAGMA INDEX_LIST(`Users`)
+Executing (default): PRAGMA INDEX_INFO(`sqlite_autoindex_Users_1`)
+Executing (default): DROP TABLE IF EXISTS `Workers`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Workers` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `experience` INTEGER, `skills` JSON DEFAULT '[]', `serviceAreas` JSON DEFAULT '[]', `isVerified` TINYINT(1) DEFAULT 0, `availability` TINYINT(1) DEFAULT 1, `availabilitySlots` JSON DEFAULT '[]', `profileImage` VARCHAR(255), `idDocument` VARCHAR(255), `ratings` FLOAT DEFAULT '0', `completedJobs` INTEGER DEFAULT 0, `trustScore` FLOAT DEFAULT '100', `commissionTier` INTEGER DEFAULT 1, `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL, `userId` INTEGER REFERENCES `Users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE);
+Executing (default): PRAGMA INDEX_LIST(`Workers`)
+Executing (default): DROP TABLE IF EXISTS `Services`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Services` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` VARCHAR(255) NOT NULL, `description` TEXT, `icon` VARCHAR(255), `startingPrice` FLOAT NOT NULL, `category` VARCHAR(255), `isFixedPrice` TINYINT(1) DEFAULT 1, `taxRate` FLOAT DEFAULT '0', `platformFee` FLOAT DEFAULT '0', `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL);
+Executing (default): PRAGMA INDEX_LIST(`Services`)
+Executing (default): DROP TABLE IF EXISTS `Bookings`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Bookings` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `status` VARCHAR(255) DEFAULT 'requested', `bookingType` VARCHAR(255) DEFAULT 'instant', `address` TEXT NOT NULL, `phone` VARCHAR(255) NOT NULL, `preferredDateTime` DATETIME NOT NULL, `description` TEXT, `totalAmount` FLOAT, `taxAmount` FLOAT, `platformFee` FLOAT, `commissionAmount` FLOAT, `workerPayout` FLOAT, `warrantyDays` INTEGER DEFAULT 7, `isWarrantyValid` TINYINT(1) DEFAULT 1, `confidenceLevel` VARCHAR(255) DEFAULT 'high', `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL, `customerId` INTEGER REFERENCES `Users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE, `workerId` INTEGER REFERENCES `Workers` (`id`) ON DELETE SET NULL ON UPDATE CASCADE, `serviceId` INTEGER REFERENCES `Services` (`id`) ON DELETE SET NULL ON UPDATE CASCADE);
+Executing (default): PRAGMA INDEX_LIST(`Bookings`)
+Executing (default): DROP TABLE IF EXISTS `Payments`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Payments` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `amount` FLOAT NOT NULL, `method` VARCHAR(255) NOT NULL, `status` VARCHAR(255) DEFAULT 'pending', `transactionId` VARCHAR(255), `gateway` VARCHAR(255) DEFAULT 'razorpay', `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL, `bookingId` INTEGER REFERENCES `Bookings` (`id`) ON DELETE SET NULL ON UPDATE CASCADE);
+Executing (default): PRAGMA INDEX_LIST(`Payments`)
+Executing (default): DROP TABLE IF EXISTS `Reviews`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Reviews` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `rating` INTEGER NOT NULL, `comment` TEXT, `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL, `bookingId` INTEGER REFERENCES `Bookings` (`id`) ON DELETE SET NULL ON UPDATE CASCADE);
+Executing (default): PRAGMA INDEX_LIST(`Reviews`)
+Executing (default): DROP TABLE IF EXISTS `Notifications`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Notifications` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `message` TEXT NOT NULL, `read` TINYINT(1) DEFAULT 0, `type` VARCHAR(255), `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL, `userId` INTEGER REFERENCES `Users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE);
+Executing (default): PRAGMA INDEX_LIST(`Notifications`)
+Executing (default): DROP TABLE IF EXISTS `Commissions`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Commissions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `percentage` FLOAT NOT NULL DEFAULT '15', `category` VARCHAR(255), `workerTier` INTEGER, `isActive` TINYINT(1) DEFAULT 1, `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL);
+Executing (default): PRAGMA INDEX_LIST(`Commissions`)
+Executing (default): DROP TABLE IF EXISTS `Warranties`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Warranties` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `durationDays` INTEGER NOT NULL DEFAULT 7, `description` TEXT, `isActive` TINYINT(1) DEFAULT 1, `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL);
+Executing (default): PRAGMA INDEX_LIST(`Warranties`)
+Executing (default): DROP TABLE IF EXISTS `Payouts`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Payouts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `amount` FLOAT NOT NULL, `status` VARCHAR(255) DEFAULT 'pending', `transactionId` VARCHAR(255), `notes` TEXT, `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL, `workerId` INTEGER REFERENCES `Workers` (`id`) ON DELETE SET NULL ON UPDATE CASCADE);
+Executing (default): PRAGMA INDEX_LIST(`Payouts`)
+Executing (default): DROP TABLE IF EXISTS `Invoices`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Invoices` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `invoiceNumber` VARCHAR(255) NOT NULL UNIQUE, `totalAmount` FLOAT NOT NULL, `taxAmount` FLOAT, `platformFee` FLOAT, `commissionAmount` FLOAT, `workerPayout` FLOAT, `isPaid` TINYINT(1) DEFAULT 0, `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL, `bookingId` INTEGER REFERENCES `Bookings` (`id`) ON DELETE SET NULL ON UPDATE CASCADE);
+Executing (default): PRAGMA INDEX_LIST(`Invoices`)
+Executing (default): PRAGMA INDEX_INFO(`sqlite_autoindex_Invoices_1`)
+Executing (default): DROP TABLE IF EXISTS `Quotations`;
+Executing (default): CREATE TABLE IF NOT EXISTS `Quotations` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `status` VARCHAR(255) DEFAULT 'pending', `laborCharges` FLOAT DEFAULT '0', `partsCost` FLOAT DEFAULT '0', `totalAmount` FLOAT NOT NULL, `notes` TEXT, `itemizedPricing` JSON DEFAULT '[]', `createdAt` DATETIME NOT NULL, `updatedAt` DATETIME NOT NULL, `bookingId` INTEGER REFERENCES `Bookings` (`id`) ON DELETE SET NULL ON UPDATE CASCADE);
+Executing (default): PRAGMA INDEX_LIST(`Quotations`)
+Database synced
+Executing (default): INSERT INTO `Commissions` (`id`,`percentage`,`isActive`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4);
+Executing (76ca4166-a2aa-4889-be20-d1923e7aa5cf): BEGIN DEFERRED TRANSACTION;
+Executing (76ca4166-a2aa-4889-be20-d1923e7aa5cf): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `isFixedPrice`, `taxRate`, `platformFee`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Plumbing' LIMIT 1;
+Executing (76ca4166-a2aa-4889-be20-d1923e7aa5cf): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`isFixedPrice`,`taxRate`,`platformFee`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10);
+Executing (76ca4166-a2aa-4889-be20-d1923e7aa5cf): COMMIT;
+Executing (2c0edbf9-6f26-4a26-a672-d006f100a606): BEGIN DEFERRED TRANSACTION;
+Executing (2c0edbf9-6f26-4a26-a672-d006f100a606): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `isFixedPrice`, `taxRate`, `platformFee`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Electrical' LIMIT 1;
+Executing (2c0edbf9-6f26-4a26-a672-d006f100a606): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`isFixedPrice`,`taxRate`,`platformFee`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10);
+Executing (2c0edbf9-6f26-4a26-a672-d006f100a606): COMMIT;
+Executing (174587fd-dab3-4c5a-af66-0e47451978e4): BEGIN DEFERRED TRANSACTION;
+Executing (174587fd-dab3-4c5a-af66-0e47451978e4): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `isFixedPrice`, `taxRate`, `platformFee`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Cleaning' LIMIT 1;
+Executing (174587fd-dab3-4c5a-af66-0e47451978e4): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`isFixedPrice`,`taxRate`,`platformFee`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10);
+Executing (174587fd-dab3-4c5a-af66-0e47451978e4): COMMIT;
+Executing (0928ca16-91c6-4ae2-ae0d-fd6d7db0ee14): BEGIN DEFERRED TRANSACTION;
+Executing (0928ca16-91c6-4ae2-ae0d-fd6d7db0ee14): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `isFixedPrice`, `taxRate`, `platformFee`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Drivers' LIMIT 1;
+Executing (0928ca16-91c6-4ae2-ae0d-fd6d7db0ee14): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`isFixedPrice`,`taxRate`,`platformFee`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10);
+Executing (0928ca16-91c6-4ae2-ae0d-fd6d7db0ee14): COMMIT;
+Executing (2b07d549-55f9-469b-98a4-ed799cd351f2): BEGIN DEFERRED TRANSACTION;
+Executing (2b07d549-55f9-469b-98a4-ed799cd351f2): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `isFixedPrice`, `taxRate`, `platformFee`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Home Repair' LIMIT 1;
+Executing (2b07d549-55f9-469b-98a4-ed799cd351f2): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`isFixedPrice`,`taxRate`,`platformFee`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10);
+Executing (2b07d549-55f9-469b-98a4-ed799cd351f2): COMMIT;
+Executing (bcd7f085-a8c6-4a48-a41b-332f671df4a3): BEGIN DEFERRED TRANSACTION;
+Executing (bcd7f085-a8c6-4a48-a41b-332f671df4a3): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `isFixedPrice`, `taxRate`, `platformFee`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'AC Service' LIMIT 1;
+Executing (bcd7f085-a8c6-4a48-a41b-332f671df4a3): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`isFixedPrice`,`taxRate`,`platformFee`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10);
+Executing (bcd7f085-a8c6-4a48-a41b-332f671df4a3): COMMIT;
+Executing (e6f55775-adc5-42a6-bcda-3676be153313): BEGIN DEFERRED TRANSACTION;
+Executing (e6f55775-adc5-42a6-bcda-3676be153313): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `isFixedPrice`, `taxRate`, `platformFee`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Painting' LIMIT 1;
+Executing (e6f55775-adc5-42a6-bcda-3676be153313): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`isFixedPrice`,`taxRate`,`platformFee`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10);
+Executing (e6f55775-adc5-42a6-bcda-3676be153313): COMMIT;
+Executing (eb343585-2920-4e6c-8c90-fa4827e87111): BEGIN DEFERRED TRANSACTION;
+Executing (eb343585-2920-4e6c-8c90-fa4827e87111): SELECT `id`, `name`, `description`, `icon`, `startingPrice`, `category`, `isFixedPrice`, `taxRate`, `platformFee`, `createdAt`, `updatedAt` FROM `Services` AS `Service` WHERE `Service`.`name` = 'Cooking' LIMIT 1;
+Executing (eb343585-2920-4e6c-8c90-fa4827e87111): INSERT INTO `Services` (`id`,`name`,`description`,`icon`,`startingPrice`,`category`,`isFixedPrice`,`taxRate`,`platformFee`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10);
+Executing (eb343585-2920-4e6c-8c90-fa4827e87111): COMMIT;
+Services seeded
+Executing (default): INSERT INTO `Users` (`id`,`name`,`email`,`password`,`phone`,`role`,`loyaltyPoints`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7,$8);
+Executing (default): INSERT INTO `Users` (`id`,`name`,`email`,`password`,`phone`,`address`,`role`,`loyaltyPoints`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7,$8,$9);
+Executing (default): INSERT INTO `Users` (`id`,`name`,`email`,`password`,`phone`,`address`,`role`,`loyaltyPoints`,`createdAt`,`updatedAt`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7,$8,$9);
+Executing (default): INSERT INTO `Workers` (`id`,`experience`,`skills`,`serviceAreas`,`isVerified`,`availability`,`availabilitySlots`,`ratings`,`completedJobs`,`trustScore`,`commissionTier`,`createdAt`,`updatedAt`,`userId`) VALUES (NULL,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13);
+Test accounts created!
+Admin: admin@skilllink.com / admin123
+Customer: customer@skilllink.com / customer123
+Worker: worker@skilllink.com / worker123
+Server running on port 5001
