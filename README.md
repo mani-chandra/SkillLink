@@ -165,14 +165,60 @@ skilllink/
 
 ## Deployment
 
-### Backend Deployment (Example: Vercel, Render, or Heroku)
-1. Set up environment variables in your hosting provider
-2. Deploy the backend code
-3. Connect to a managed PostgreSQL database (e.g., Supabase, AWS RDS)
+### Frontend Deployment (Vercel)
 
-### Frontend Deployment (Example: Vercel)
-1. Deploy the Next.js app to Vercel
-2. Set the backend API URL in your frontend
+1. **Sign up for Vercel**:
+   - Go to [https://vercel.com](https://vercel.com) and create an account
+
+2. **Deploy using Vercel Dashboard**:
+   - Click "Add New" → "Project"
+   - Import your GitHub/GitLab/Bitbucket repository
+   - In the configuration:
+     - **Root Directory**: Select `frontend`
+     - **Framework Preset**: Next.js (should be auto-detected)
+   - Click "Deploy"
+
+3. **Or Deploy using Vercel CLI**:
+   ```bash
+   # Install Vercel CLI (if not already installed)
+   npm i -g vercel
+
+   # Login to Vercel
+   vercel login
+
+   # Deploy from project root
+   cd /Users/mani/Documents/trae_projects/AI\ Proctoring\ Website/skilllink
+   vercel
+   ```
+
+### Backend Deployment (Render.com)
+
+1. **Sign up for Render**:
+   - Go to [https://render.com](https://render.com) and create an account
+
+2. **Deploy Backend**:
+   - Click "New" → "Web Service"
+   - Connect your repository
+   - Configure:
+     - **Name**: skilllink-backend
+     - **Region**: Choose the closest to you
+     - **Branch**: main (or your default branch)
+     - **Root Directory**: backend
+     - **Runtime**: Node
+     - **Build Command**: `npm install`
+     - **Start Command**: `node index.js`
+   - Add Environment Variable:
+     - `JWT_SECRET` = (generate a secure random string, e.g., using `openssl rand -base64 32`)
+     - `PORT` = 10000 (Render uses this port automatically)
+   - Click "Create Web Service"
+
+3. **Update Frontend API URL**:
+   After deploying the backend, update your frontend code to use your new backend URL instead of `http://localhost:5001`
+
+### Environment Variables
+
+Make sure to set these environment variables in your Vercel project:
+- (Future: `NEXT_PUBLIC_API_URL` = your deployed backend URL)
 
 ## Security
 
