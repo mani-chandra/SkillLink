@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import axios from 'axios';
+import API_BASE_URL from '@/lib/api';
 
 interface Service {
   id: number;
@@ -33,7 +34,7 @@ export default function Home() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const res = await axios.get('http://localhost:5001/api/services');
+        const res = await axios.get(`${API_BASE_URL}/api/services`);
         setServices(res.data);
       } catch (error) {
         console.error('Error fetching services:', error);

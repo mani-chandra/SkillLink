@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/lib/context/AuthContext';
 import axios from 'axios';
+import API_BASE_URL from '@/lib/api';
 
 const PREDEFINED_CITIES = [
   'Jagtial',
@@ -68,7 +69,7 @@ export default function ServiceDetailPage() {
     setErrorMessage('');
     try {
       const address = `${formData.houseNo}, ${newStreet}, ${formData.landmark ? formData.landmark + ', ' : ''}${newCity}`;
-      const res = await axios.post('http://localhost:5001/api/bookings/check-capacity', {
+      const res = await axios.post('${API_BASE_URL}/api/bookings/check-capacity', {
         serviceId: id,
         preferredDateTime: newDateTime,
         address: address
@@ -99,7 +100,7 @@ export default function ServiceDetailPage() {
   useEffect(() => {
     const fetchService = async () => {
       try {
-        const res = await axios.get(`http://localhost:5001/api/services/${id}`);
+        const res = await axios.get(`${API_BASE_URL}/api/services/${id}`);
         setService(res.data);
       } catch (error) {
         console.error('Error fetching service:', error);
@@ -118,7 +119,7 @@ export default function ServiceDetailPage() {
     }
     const address = `${formData.houseNo}, ${formData.street}, ${formData.landmark ? formData.landmark + ', ' : ''}${formData.city}`;
     try {
-      await axios.post('http://localhost:5001/api/bookings', {
+      await axios.post('${API_BASE_URL}/api/bookings', {
         serviceId: id,
         address,
         phone: formData.phone,

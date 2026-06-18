@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
+import API_BASE_URL from '../api';
 
 interface User {
   id: number;
@@ -38,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await axios.post('http://localhost:5001/api/auth/login', { email, password });
+    const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
     setToken(res.data.token);
     setUser(res.data.user);
     localStorage.setItem('token', res.data.token);
@@ -46,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (name: string, email: string, password: string, phone?: string, role: string = 'customer') => {
-    const res = await axios.post('http://localhost:5001/api/auth/register', { name, email, password, phone, role });
+    const res = await axios.post(`${API_BASE_URL}/api/auth/register`, { name, email, password, phone, role });
     setToken(res.data.token);
     setUser(res.data.user);
     localStorage.setItem('token', res.data.token);

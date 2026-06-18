@@ -1132,6 +1132,113 @@ app.get('/api/bookings', authMiddleware, async (req, res) => {
   }
 });
 
+// Admin: Change any user's password
+app.put('/api/admin/users/:id/password', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    await user.update({ password: hashedPassword });
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin: Change any user's role
+app.put('/api/admin/users/:id/role', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    const { role } = req.body;
+    if (!['admin', 'customer', 'worker'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const oldRole = user.role;
+    await user.update({ role });
+    
+    // If changing to worker, create worker profile if not exists
+    if (role === 'worker' && oldRole !== 'worker') {
+      const existingWorker = await Worker.findOne({ where: { userId: user.id } });
+      if (!existingWorker) {
+        await Worker.create({ userId: user.id });
+      }
+    }
+    
+    res.json({ message: 'Role updated successfully', user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin: Cancel any booking
+app.put('/api/admin/bookings/:id/cancel', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    const booking = await Booking.findByPk(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+    await booking.update({ status: 'cancelled' });
+    res.json({ message: 'Booking cancelled successfully', booking });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin: Modify any booking
+app.put('/api/admin/bookings/:id', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    const booking = await Booking.findByPk(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+    const { address, phone, preferredDateTime, description, status, workerId } = req.body;
+    await booking.update({
+      address: address !== undefined ? address : booking.address,
+      phone: phone !== undefined ? phone : booking.phone,
+      preferredDateTime: preferredDateTime !== undefined ? preferredDateTime : booking.preferredDateTime,
+      description: description !== undefined ? description : booking.description,
+      status: status !== undefined ? status : booking.status,
+      workerId: workerId !== undefined ? workerId : booking.workerId
+    });
+    const updatedBooking = await Booking.findByPk(req.params.id, {
+      include: [
+        { model: Service },
+        { model: User, as: 'customer', attributes: { exclude: ['password'] } },
+        { model: Worker, as: 'worker', include: [{ model: User, as: 'User', attributes: { exclude: ['password'] } }] }
+      ]
+    });
+    res.json({ message: 'Booking updated successfully', booking: updatedBooking });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 async function startServer() {
   try {
     await sequelize.sync({ force: false });

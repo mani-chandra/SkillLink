@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/lib/context/AuthContext';
 import axios from 'axios';
+import API_BASE_URL from '@/lib/api';
 
 interface Booking {
   id: number;
@@ -59,10 +60,10 @@ export default function CustomerDashboard() {
     const fetchData = async () => {
       try {
         const [bookingsRes, profileRes] = await Promise.all([
-          axios.get('http://localhost:5001/api/bookings/customer', {
+          axios.get(`${API_BASE_URL}/api/bookings/customer`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get('http://localhost:5001/api/auth/me', {
+          axios.get(`${API_BASE_URL}/api/auth/me`, {
             headers: { Authorization: `Bearer ${token}` }
           })
         ]);
@@ -83,7 +84,7 @@ export default function CustomerDashboard() {
 
   const saveProfile = async () => {
     try {
-      const res = await axios.put('http://localhost:5001/api/auth/profile', 
+      const res = await axios.put(`${API_BASE_URL}/api/auth/profile`, 
         { name, phone, address }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -99,7 +100,7 @@ export default function CustomerDashboard() {
 
   const changePassword = async () => {
     try {
-      await axios.put('http://localhost:5001/api/auth/change-password', 
+      await axios.put(`${API_BASE_URL}/api/auth/change-password`, 
         { currentPassword, newPassword }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -116,7 +117,7 @@ export default function CustomerDashboard() {
 
   const cancelBooking = async (bookingId: number) => {
     try {
-      await axios.put(`http://localhost:5001/api/bookings/${bookingId}/cancel`, {}, {
+      await axios.put(`${API_BASE_URL}/api/bookings/${bookingId}/cancel`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
@@ -142,7 +143,7 @@ export default function CustomerDashboard() {
   const saveEditBooking = async () => {
     if (!editingBooking) return;
     try {
-      const res = await axios.put(`http://localhost:5001/api/bookings/${editingBooking.id}`, {
+      const res = await axios.put(`${API_BASE_URL}/api/bookings/${editingBooking.id}`, {
         address: editAddress,
         phone: editPhone,
         preferredDateTime: editPreferredDateTime,

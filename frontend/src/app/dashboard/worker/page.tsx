@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/lib/context/AuthContext';
 import axios from 'axios';
+import API_BASE_URL from '@/lib/api';
 
 interface Booking {
   id: number;
@@ -112,10 +113,10 @@ export default function WorkerDashboard() {
     const fetchData = async () => {
       try {
         const [bookingsRes, workerRes] = await Promise.all([
-          axios.get('http://localhost:5001/api/bookings/worker', {
+          axios.get(`${API_BASE_URL}/api/bookings/worker`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get('http://localhost:5001/api/workers/me', {
+          axios.get(`${API_BASE_URL}/api/workers/me`, {
             headers: { Authorization: `Bearer ${token}` }
           })
         ]);
@@ -156,7 +157,7 @@ export default function WorkerDashboard() {
 
   const updateStatus = async (bookingId: number, status: string) => {
     try {
-      await axios.put(`http://localhost:5001/api/bookings/${bookingId}/status`, { status }, {
+      await axios.put(`${API_BASE_URL}/api/bookings/${bookingId}/status`, { status }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBookings(bookings.map(b => b.id === bookingId ? { ...b, status } : b));
@@ -183,7 +184,7 @@ export default function WorkerDashboard() {
 
   const saveSkillsAndAreas = async () => {
     try {
-      await axios.put('http://localhost:5001/api/workers/profile', { 
+      await axios.put(`${API_BASE_URL}/api/workers/profile`, { 
         skills, 
         serviceAreas, 
         experience: experience ? parseInt(experience) : null,
@@ -202,7 +203,7 @@ export default function WorkerDashboard() {
 
   const saveSlots = async () => {
     try {
-      await axios.put('http://localhost:5001/api/workers/slots', { availabilitySlots: availabilitySlots }, {
+      await axios.put(`${API_BASE_URL}/api/workers/slots`, { availabilitySlots: availabilitySlots }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSlotsMessage('Availability slots updated successfully!');
@@ -215,7 +216,7 @@ export default function WorkerDashboard() {
   };
 
   const saveProfile = () => {
-    axios.put('http://localhost:5001/api/workers/profile', { 
+    axios.put(`${API_BASE_URL}/api/workers/profile`, { 
       skills, 
       serviceAreas, 
       experience: experience ? parseInt(experience) : null,
@@ -227,7 +228,7 @@ export default function WorkerDashboard() {
 
   const saveUserProfile = async () => {
     try {
-      const res = await axios.put('http://localhost:5001/api/users/profile', {
+      const res = await axios.put(`${API_BASE_URL}/api/users/profile`, {
         name: userName,
         phone: userPhone,
         address: userAddress
@@ -254,7 +255,7 @@ export default function WorkerDashboard() {
       return;
     }
     try {
-      await axios.put('http://localhost:5001/api/auth/change-password', {
+      await axios.put(`${API_BASE_URL}/api/auth/change-password`, {
         currentPassword,
         newPassword
       }, {
@@ -273,7 +274,7 @@ export default function WorkerDashboard() {
 
   const saveDocuments = async () => {
     try {
-      await axios.put('http://localhost:5001/api/workers/documents', {
+      await axios.put(`${API_BASE_URL}/api/workers/documents`, {
         profileImage: profileImageUrl,
         idDocument: idDocumentUrl
       }, {
