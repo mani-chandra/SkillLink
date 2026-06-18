@@ -26,6 +26,7 @@ interface BookingType {
   Service: { name: string; icon: string };
   customer: { name: string; phone: string };
   worker?: { User: { name: string } };
+  workerId?: number | null;
 }
 
 export default function AdminDashboard() {
