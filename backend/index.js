@@ -13,11 +13,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: ':memory:',
-  logging: console.log
-});
+const sequelize = new Sequelize(
+  process.env.DATABASE_URL || 'postgres://user:pass@localhost:5432/skilllink',
+  {
+    dialect: 'postgres',
+    protocol: 'postgres',
+    logging: console.log,
+    dialectOptions: {
+      ssl: process.env.DATABASE_URL ? {
+        require: true,
+        rejectUnauthorized: false
+      } : false
+    }
+  }
+);
 
 const User = sequelize.define('User', {
   name: { type: DataTypes.STRING, allowNull: false },
